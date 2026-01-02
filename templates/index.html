@@ -62,15 +62,6 @@
             display: none;
         }
 
-        .message.user {
-            background-color: #DCF8C6; /* A softer green for user messages */
-            justify-content: flex-end; /* Align user messages to the right */
-        }
-
-        .message.bot {
-            justify-content: flex-start; /* Align bot messages to the left */
-        }
-
         .message strong {
             font-weight: bold;
             margin-right: 10px;
@@ -79,104 +70,103 @@
         /* Message bubble styles */
         .user-bubble {
             background-color: #DCF8C6; /* A softer green for user messages */
-            margin-right: 10px; /* Give some space between bubbles */
+            margin-right: 10px;
             float: right;
-            clear: both; /* Make sure each bubble is on a new line */
+            clear: both;
         }
 
         .bot-bubble {
-            margin-left: 10px; /* Give some space between bubbles */
+            margin-left: 10px;
             float: left;
-            clear: both; /* Make sure each bubble is on a new line */
+            clear: both;
         }
     </style>
 </head>
 
 <body class="bg-light">
-<div class="container">
-    <h1 class="text-center mb-4">Council Chat</h1>
+    <div class="container">
+        <h1 class="text-center mb-4">Council Chat</h1>
 
-    <div id="chatbox" class="chatbox">
+        <div id="chatbox" class="chatbox">
+            </div>
+
+        <div class="mt-4">
+            <div class="input-group">
+                <input id="question-input" type="text" class="form-control rounded py-2" placeholder="Ask a question..." aria-label="Ask a question">
+                <button id="submit-button" class="btn btn-primary py-2 rounded">Ask</button>
+            </div>
         </div>
 
-    <div class="mt-4">
-        <div class="input-group">
-            <input id="question-input" type="text" class="form-control rounded py-2" placeholder="Ask a question..." aria-label="Ask a question">
-            <button id="submit-button" class="btn btn-primary py-2 rounded">Ask</button>
-        </div>
-    </div>
-
-    <div id="loading" class="loading hidden">Loading...</div>
-
+        <div id="loading" class="loading hidden">Loading...</div>
 <script>
-const questionInput = document.getElementById('question-input');
-const submitButton = document.getElementById('submit-button');
-const chatbox = document.getElementById('chatbox');
-const loadingDiv = document.getElementById('loading');
+    const questionInput = document.getElementById('question-input');
+    const submitButton = document.getElementById('submit-button');
+    const chatbox = document.getElementById('chatbox');
+    const loadingDiv = document.getElementById('loading');
 
-const personalityColors = {
-    "The Scholar": "scholar",
-    "The Optimist": "optimist",
-    "The Minimalist": "minimalist",
-    "The Creative": "creative",
-    "The Mentor": "mentor",
-    "The Performer": "performer",
-    "The Traditionalist": "traditionalist",
-    "The Environmentalist": "environmentalist"
-};
+    const personalityColors = {
+        "The Scholar": "scholar",
+        "The Optimist": "optimist",
+        "The Minimalist": "minimalist",
+        "The Creative": "creative",
+        "The Mentor": "mentor",
+        "The Performer": "performer",
+        "The Traditionalist": "traditionalist",
+        "The Environmentalist": "environmentalist"
+    };
 
-const personalities = ["The Scholar", "The Optimist", "The Minimalist", "The Creative", "The Mentor", "The Performer", "The Traditionalist", "The Environmentalist"];
-
-
-// Initial message from the bot
-const initialMessage = `<div class="message bot-bubble"><strong >Bot:</strong> Hello! Ask me a question, and I'll respond as different personality types.</div>`;
-chatbox.innerHTML = initialMessage;
-chatbox.scrollTop = chatbox.scrollHeight;
+    const personalities = ["The Scholar", "The Optimist", "The Minimalist", "The Creative", "The Mentor", "The Performer", "The Traditionalist", "The Environmentalist"];
 
 
-submitButton.addEventListener('click', async () => {
-    const question = questionInput.value.trim();
-    if (!question) {
-        return;
-    }
-
-    questionInput.value = '';
-    questionInput.focus();
-
-    const userMessageElement = document.createElement('div');
-    userMessageElement.className = 'message user-bubble';
-    userMessageElement.innerHTML = `<strong class="me">You:</strong><br>${question}`;
-    chatbox.appendChild(userMessageElement);
+    // Initial message from the bot
+    const initialMessage = `<div class="message bot-bubble">Bot: Hello! Ask me a question, and I'll respond as different personality types.</div>`;
+    chatbox.innerHTML = initialMessage;
     chatbox.scrollTop = chatbox.scrollHeight;
 
-    loadingDiv.classList.remove('hidden');
 
-    // Fetch responses from each personality sequentially
-    for (const personality of personalities) {
-        try {
-            const response = await fetch(`/personality/${personality}?question=${encodeURIComponent(question)}`);
-            const data = await response.json();
-
-            loadingDiv.classList.add('hidden');
-
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message bot-bubble ${personalityColors[personality] || ''}`; // Apply color class
-            messageDiv.innerHTML = `<strong class="bot">${personality}:</strong><br>${data.response}`;
-            chatbox.appendChild(messageDiv);
-
-        } catch (error) {
-            loadingDiv.classList.add('hidden');
-            const errorMessageElement = document.createElement('div');
-            errorMessageElement.className = 'message bot-bubble';
-            errorMessageElement.innerHTML = `<strong class="bot">Error:</strong><br>${error.message}`;
-            chatbox.appendChild(errorMessageElement);
+    submitButton.addEventListener('click', async () => {
+        const question = questionInput.value.trim();
+        if (!question) {
+            return;
         }
 
-        chatbox.scrollTop = chatbox.scrollHeight;
-    }
+        questionInput.value = '';
+        questionInput.focus();
 
-    loadingDiv.classList.add('hidden');
-});
+        const userMessageElement = document.createElement('div');
+        userMessageElement.className = 'message user-bubble';
+        userMessageElement.innerHTML = `<strong class="me">You:</strong> ${question}`;
+        chatbox.appendChild(userMessageElement);
+        chatbox.scrollTop = chatbox.scrollHeight;
+
+        loadingDiv.classList.remove('hidden');
+
+        // Fetch responses from each personality sequentially
+        for (const personality of personalities) {
+            try {
+                const response = await fetch(`/personality/${personality}?question=${encodeURIComponent(question)}`);
+                const data = await response.json();
+
+                loadingDiv.classList.add('hidden');
+
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message bot-bubble ${personalityColors[personality] || ''}`;
+                messageDiv.innerHTML = `<strong class="bot">${personality}:</strong> ${data.response}`;
+                chatbox.appendChild(messageDiv);
+
+            } catch (error) {
+                loadingDiv.classList.add('hidden');
+                const errorMessageElement = document.createElement('div');
+                errorMessageElement.className = 'message bot-bubble';
+                errorMessageElement.innerHTML = `<strong class="bot">Error:</strong> ${error.message}`;
+                chatbox.appendChild(errorMessageElement);
+            }
+
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        loadingDiv.classList.add('hidden');
+    });
 </script>
 </body>
 </html>
