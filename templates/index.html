@@ -43,16 +43,6 @@
             word-wrap: break-word;
         }
 
-        .scholar { background-color: #f0f8ff; }
-        .optimist { background-color: #e2ffe6; }
-        .skeptic { background-color: #ffe6e6; }
-        .minimalist { background-color: #ffe6cc; }
-        .creative { background-color: #ccebff; }
-        .mentor { background-color: #d4edda; }
-        .performer { background-color: #f8d7da; }
-        .traditionalist { background-color: #ffffe0; }
-        .environmentalist { background-color: #d9f7f1; }
-
         .loading {
             text-align: center;
             margin-top: 10px;
@@ -69,7 +59,7 @@
 
         /* Message bubble styles */
         .user-bubble {
-            background-color: #DCF8C6; /* A softer green for user messages */
+            background-color: #DCF8C6;
             margin-right: 10px;
             float: right;
             clear: both;
@@ -80,6 +70,38 @@
             float: left;
             clear: both;
         }
+
+        .message.scholar {
+            background-color: #E2F0D9 !important;
+        }
+
+        .message.optimist {
+            background-color: #C8E6C9 !important;
+        }
+
+        .message.minimalist {
+            background-color: #B2DFDB !important;
+        }
+
+        .message.creative {
+            background-color: #A5D6A7 !important;
+        }
+
+        .message.mentor {
+            background-color: #9ACD9B !important;
+        }
+
+        .message.performer {
+            background-color: #8FBE8F !important;
+        }
+
+        .message.traditionalist {
+            background-color: #7FB37F !important;
+        }
+
+        .message.environmentalist {
+            background-color: #699C69 !important;
+        }
     </style>
 </head>
 
@@ -87,7 +109,7 @@
     <div class="container">
         <h1 class="text-center mb-4">Council Chat</h1>
 
-        <div id="chatbox" class="chatbox">
+        <div id="chatbox" class="chatbox" style="height: 600px; overflow-y: auto;">
             </div>
 
         <div class="mt-4">
@@ -98,6 +120,7 @@
         </div>
 
         <div id="loading" class="loading hidden">Loading...</div>
+
 <script>
     const questionInput = document.getElementById('question-input');
     const submitButton = document.getElementById('submit-button');
@@ -121,7 +144,7 @@
     // Initial message from the bot
     const initialMessage = `<div class="message bot-bubble">Bot: Hello! Ask me a question, and I'll respond as different personality types.</div>`;
     chatbox.innerHTML = initialMessage;
-    chatbox.scrollTop = chatbox.scrollHeight;
+    chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after initial message
 
 
     submitButton.addEventListener('click', async () => {
@@ -135,37 +158,39 @@
 
         const userMessageElement = document.createElement('div');
         userMessageElement.className = 'message user-bubble';
-        userMessageElement.innerHTML = `<strong class="me">You:</strong> ${question}`;
+        userMessageElement.innerHTML = `<strong class="me">You:</strong>${question}`;
         chatbox.appendChild(userMessageElement);
-        chatbox.scrollTop = chatbox.scrollHeight;
+        chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after user message
 
         loadingDiv.classList.remove('hidden');
 
-        // Fetch responses from each personality sequentially
-        for (const personality of personalities) {
-            try {
-                const response = await fetch(`/personality/${personality}?question=${encodeURIComponent(question)}`);
-                const data = await response.json();
+        const processPersonality = async () => {
+            for (const personality of personalities) {
+                try {
+                    const response = await fetch(`/personality/${personality}?question=${encodeURIComponent(question)}`);
+                    const data = await response.json();
 
-                loadingDiv.classList.add('hidden');
+                    loadingDiv.classList.add('hidden');
 
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message bot-bubble ${personalityColors[personality] || ''}`;
-                messageDiv.innerHTML = `<strong class="bot">${personality}:</strong> ${data.response}`;
-                chatbox.appendChild(messageDiv);
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message bot-bubble ${personalityColors[personality] || ''}`;
+                    messageDiv.innerHTML = `<strong class="bot">${personality}:</strong>${data.response}`;
+                    chatbox.appendChild(messageDiv);
+                    chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after bot message
 
-            } catch (error) {
-                loadingDiv.classList.add('hidden');
-                const errorMessageElement = document.createElement('div');
-                errorMessageElement.className = 'message bot-bubble';
-                errorMessageElement.innerHTML = `<strong class="bot">Error:</strong> ${error.message}`;
-                chatbox.appendChild(errorMessageElement);
+                } catch (error) {
+                    loadingDiv.classList.add('hidden');
+                    const errorMessageElement = document.createElement('div');
+                    errorMessageElement.className = 'message bot-bubble';
+                    errorMessageElement.innerHTML = `<strong class="bot">Error:</strong>${error.message}`;
+                    chatbox.appendChild(errorMessageElement);
+                    chatbox.scrollTop = chatbox.scrollHeight;  //Scroll even with errors.
+                }
             }
+            loadingDiv.classList.add('hidden'); //Ensure loading is hidden after all personalities processed.
+        };
 
-            chatbox.scrollTop = chatbox.scrollHeight;
-        }
-
-        loadingDiv.classList.add('hidden');
+        processPersonality(); // Start the processing loop.
     });
 </script>
 </body>
