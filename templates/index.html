@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personality API Chat</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .chatbox {
+            border: none;
+            padding: 20px;
+            margin-top: 0;
+            border-radius: 0;
+            height: auto;
+            overflow-y: auto;
+            background-color: #f7f7f7;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            word-wrap: break-word;
+        }
+
+        .scholar { background-color: #f0f8ff; }
+        .optimist { background-color: #e2ffe6; }
+        .skeptic { background-color: #ffe6e6; }
+        .minimalist { background-color: #ffe6cc; }
+        .creative { background-color: #ccebff; }
+        .mentor { background-color: #d4edda; }
+        .performer { background-color: #f8d7da; }
+        .traditionalist { background-color: #ffffe0; }
+        .environmentalist { background-color: #d9f7f1; }
+
+        .loading {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .message.user {
+            background-color: #DCF8C6; /* A softer green for user messages */
+            justify-content: flex-end; /* Align user messages to the right */
+        }
+
+        .message.bot {
+            justify-content: flex-start; /* Align bot messages to the left */
+        }
+
+        .message strong {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* Message bubble styles */
+        .user-bubble {
+            background-color: #DCF8C6; /* A softer green for user messages */
+            margin-right: 10px; /* Give some space between bubbles */
+            float: right;
+            clear: both; /* Make sure each bubble is on a new line */
+        }
+
+        .bot-bubble {
+            margin-left: 10px; /* Give some space between bubbles */
+            float: left;
+            clear: both; /* Make sure each bubble is on a new line */
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+<div class="container">
+    <h1 class="text-center mb-4">Council Chat</h1>
+
+    <div id="chatbox" class="chatbox">
+        </div>
+
+    <div class="mt-4">
+        <div class="input-group">
+            <input id="question-input" type="text" class="form-control rounded py-2" placeholder="Ask a question..." aria-label="Ask a question">
+            <button id="submit-button" class="btn btn-primary py-2 rounded">Ask</button>
+        </div>
+    </div>
+
+    <div id="loading" class="loading hidden">Loading...</div>
+
+<script>
+const questionInput = document.getElementById('question-input');
+const submitButton = document.getElementById('submit-button');
+const chatbox = document.getElementById('chatbox');
+const loadingDiv = document.getElementById('loading');
+
+const personalityColors = {
+    "The Scholar": "scholar",
+    "The Optimist": "optimist",
+    "The Minimalist": "minimalist",
+    "The Creative": "creative",
+    "The Mentor": "mentor",
+    "The Performer": "performer",
+    "The Traditionalist": "traditionalist",
+    "The Environmentalist": "environmentalist"
+};
+
+// Initial message from the bot
+const initialMessage = `<div class="message bot-bubble"><strong >Bot:</strong> Hello! Ask me a question, and I'll respond as different personality types.</div>`;
+chatbox.innerHTML = initialMessage;
+chatbox.scrollTop = chatbox.scrollHeight;
+
+submitButton.addEventListener('click', async () => {
+    const question = questionInput.value.trim();
+    if (!question) {
+        return;
+    }
+
+    questionInput.value = '';
+    questionInput.focus();
+
+    const userMessageElement = document.createElement('div');
+    userMessageElement.className = 'message user-bubble';
+    userMessageElement.innerHTML = `<strong class="me">You:</strong><br>${question}`;
+    chatbox.appendChild(userMessageElement);
+    chatbox.scrollTop = chatbox.scrollHeight;
+
+    loadingDiv.classList.remove('hidden');
+
+    try {
+        const response = await fetch(`/all_personalities?question=${encodeURIComponent(question)}`);
+        const data = await response.json();
+
+        loadingDiv.classList.add('hidden');
+
+        Object.entries(data.personalities).forEach(([personality, text]) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message bot-bubble ${personalityColors[personality] || ''}`; // Apply color class
+            messageDiv.innerHTML = `<strong class="bot">${personality}:</strong><br>${text}`;
+            chatbox.appendChild(messageDiv);
+        });
+
+        chatbox.scrollTop = chatbox.scrollHeight;
+
+    } catch (error) {
+        loadingDiv.classList.add('hidden');
+        const errorMessageElement = document.createElement('div');
+        errorMessageElement.className = 'message bot-bubble';
+        errorMessageElement.innerHTML = `<strong class="bot">Error:</strong><br>${error.message}`;
+        chatbox.appendChild(errorMessageElement);
+    }
+});
+</script>
+</body>
+</html>
