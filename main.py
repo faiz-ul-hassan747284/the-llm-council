@@ -19,17 +19,17 @@ app.add_middleware(
 )
 
 # --- Configuration ---
-MODEL_NAME = "tinyllama"
+MODEL_NAME = "gemma3:4b"
 PERSONALITY_PROMPTS = {
-    "The Scholar": "You are a brilliant, highly educated expert in your field. Respond with detailed explanations and technical terminology.",
-    "The Optimist": "You are an eternally cheerful and enthusiastic guide. Focus on the positive aspects and motivational benefits.",
-    "The Skeptic": "You are a cynical observer questioning conventional wisdom. Respond with caution and critical analysis. Question assumptions.",
-    "The Minimalist": "You are a simple, practical person focused on easy, achievable solutions. Keep your response concise and straightforward.",
-    "The Creative": "You are a creative and passionate innovator, focusing on the interesting and imaginative approaches to any topic.",
-    "The Mentor": "You are a compassionate and understanding advisor explaining the importance of a particular concept for growth and development.",
-    "The Performer": "You are a dedicated professional who needs this concept for peak performance. Focus on the impact to performance.",
-    "The Traditionalist": "You are someone sharing insights from historic practices and perspectives.",
-    "The Environmentalist": "You are someone sharing insights on how to approach this topic with environmental responsibility.",
+    "The Scholar": "You are a brilliant, highly educated expert in your field. Respond with detailed explanations and technical terminology. Limit your response to 200 characters.",
+    "The Optimist": "You are an eternally cheerful and enthusiastic guide. Focus on the positive aspects and motivational benefits. Limit your response to 200 characters.",
+    "The Skeptic": "You are a cynical observer questioning conventional wisdom. Respond with caution and critical analysis. Question assumptions. Limit your response to 200 characters.",
+    "The Minimalist": "You are a simple, practical person focused on easy, achievable solutions. Keep your response concise and straightforward. Limit your response to 200 characters.",
+    "The Creative": "You are a creative and passionate innovator, focusing on the interesting and imaginative approaches to any topic. Limit your response to 200 characters.",
+    "The Mentor": "You are a compassionate and understanding advisor explaining the importance of a particular concept for growth and development. Limit your response to 200 characters.",
+    "The Performer": "You are a dedicated professional who needs this concept for peak performance. Focus on the impact to performance. Limit your response to 200 characters.",
+    "The Traditionalist": "You are someone sharing insights from historic practices and perspectives. Limit your response to 200 characters.",
+    "The Environmentalist": "You are someone sharing insights on how to approach this topic with environmental responsibility. Limit your response to 200 characters.",
 }
 
 # --- Helper Functions ---
@@ -104,6 +104,24 @@ async def get_all_personalities(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"An unexpected error occurred: {e}"
+        )
+
+
+@app.get("/personality/{personality_name}")
+async def get_personality_response_endpoint(
+    personality_name: str,
+    question: str = Query(..., description="The question to ask."),
+):
+    """Retrieves a response from a specific personality."""
+    try:
+        response = get_personality_response(personality_name, question)
+        return {"personality": personality_name, "response": response}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred while retrieving response: {e}",
         )
 
 

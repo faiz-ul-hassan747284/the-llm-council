@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personality API Chat</title>
+    <title>LLM Council</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -125,10 +125,14 @@ const personalityColors = {
     "The Environmentalist": "environmentalist"
 };
 
+const personalities = ["The Scholar", "The Optimist", "The Minimalist", "The Creative", "The Mentor", "The Performer", "The Traditionalist", "The Environmentalist"];
+
+
 // Initial message from the bot
 const initialMessage = `<div class="message bot-bubble"><strong >Bot:</strong> Hello! Ask me a question, and I'll respond as different personality types.</div>`;
 chatbox.innerHTML = initialMessage;
 chatbox.scrollTop = chatbox.scrollHeight;
+
 
 submitButton.addEventListener('click', async () => {
     const question = questionInput.value.trim();
@@ -147,28 +151,31 @@ submitButton.addEventListener('click', async () => {
 
     loadingDiv.classList.remove('hidden');
 
-    try {
-        const response = await fetch(`/all_personalities?question=${encodeURIComponent(question)}`);
-        const data = await response.json();
+    // Fetch responses from each personality sequentially
+    for (const personality of personalities) {
+        try {
+            const response = await fetch(`/personality/${personality}?question=${encodeURIComponent(question)}`);
+            const data = await response.json();
 
-        loadingDiv.classList.add('hidden');
+            loadingDiv.classList.add('hidden');
 
-        Object.entries(data.personalities).forEach(([personality, text]) => {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message bot-bubble ${personalityColors[personality] || ''}`; // Apply color class
-            messageDiv.innerHTML = `<strong class="bot">${personality}:</strong><br>${text}`;
+            messageDiv.innerHTML = `<strong class="bot">${personality}:</strong><br>${data.response}`;
             chatbox.appendChild(messageDiv);
-        });
+
+        } catch (error) {
+            loadingDiv.classList.add('hidden');
+            const errorMessageElement = document.createElement('div');
+            errorMessageElement.className = 'message bot-bubble';
+            errorMessageElement.innerHTML = `<strong class="bot">Error:</strong><br>${error.message}`;
+            chatbox.appendChild(errorMessageElement);
+        }
 
         chatbox.scrollTop = chatbox.scrollHeight;
-
-    } catch (error) {
-        loadingDiv.classList.add('hidden');
-        const errorMessageElement = document.createElement('div');
-        errorMessageElement.className = 'message bot-bubble';
-        errorMessageElement.innerHTML = `<strong class="bot">Error:</strong><br>${error.message}`;
-        chatbox.appendChild(errorMessageElement);
     }
+
+    loadingDiv.classList.add('hidden');
 });
 </script>
 </body>
