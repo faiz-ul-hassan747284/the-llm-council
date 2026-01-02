@@ -34,6 +34,7 @@ PERSONALITY_PROMPTS = {
 
 # --- Helper Functions ---
 
+
 def get_personality_response(personality_name: str, question: str) -> str:
     """Retrieves a response from a specific personality."""
     if personality_name not in PERSONALITY_PROMPTS:
@@ -41,9 +42,12 @@ def get_personality_response(personality_name: str, question: str) -> str:
 
     prompt = f"{PERSONALITY_PROMPTS[personality_name]}\n\nQuestion: {question}\nAnswer:"
     try:
-        return ollama.generate(model='tinyllama', prompt=prompt).response
+        return ollama.generate(model="tinyllama", prompt=prompt).response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating response from {personality_name}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating response from {personality_name}: {e}",
+        )
 
 
 def synthesize_responses(personality_responses: Dict[str, str], question: str) -> str:
@@ -58,43 +62,54 @@ def synthesize_responses(personality_responses: Dict[str, str], question: str) -
     """
 
     try:
-        return ollama.generate(model='gemma3:12b', prompt=prompt).response
+        return ollama.generate(model="gemma3:12b", prompt=prompt).response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error synthesizing responses: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error synthesizing responses: {e}"
+        )
 
 
 # --- API Endpoints ---
 templates = Jinja2Templates(directory="templates")
 
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     # Context must be a dictionary and *must* include the request object
     context = {"request": request, "name": "User"}
-    return templates.TemplateResponse(
-        name="index.html",
-        context=context
-    )
+    return templates.TemplateResponse(name="index.html", context=context)
+
 
 @app.get("/all_personalities")
-async def get_all_personalities(question: str = Query(..., description="The question to ask the personalities")):
+async def get_all_personalities(
+    question: str = Query(..., description="The question to ask the personalities")
+):
     """Retrieves responses from all personalities and combines them."""
     personality_responses = {}
     try:
         for personality_name in PERSONALITY_PROMPTS:
-            personality_responses[personality_name] = get_personality_response(personality_name, question)
+            personality_responses[personality_name] = get_personality_response(
+                personality_name, question
+            )
 
         combined_response = synthesize_responses(personality_responses, question)
 
-        return {"personalities": personality_responses, "combined_response": combined_response}
+        return {
+            "personalities": personality_responses,
+            "combined_response": combined_response,
+        }
 
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"An unexpected error occurred: {e}"
+        )
 
 
 # --- Run the Application ---
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
