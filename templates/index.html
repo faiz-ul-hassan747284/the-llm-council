@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -102,6 +103,12 @@
         .message.environmentalist {
             background-color: #699C69 !important;
         }
+
+        .see-more {
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -110,88 +117,126 @@
         <h1 class="text-center mb-4">Council Chat</h1>
 
         <div id="chatbox" class="chatbox" style="height: 600px; overflow-y: auto;">
-            </div>
+        </div>
 
         <div class="mt-4">
             <div class="input-group">
-                <input id="question-input" type="text" class="form-control rounded py-2" placeholder="Ask a question..." aria-label="Ask a question">
+                <input id="question-input" type="text" class="form-control rounded py-2" placeholder="Ask a question..."
+                    aria-label="Ask a question">
                 <button id="submit-button" class="btn btn-primary py-2 rounded">Ask</button>
             </div>
         </div>
 
         <div id="loading" class="loading hidden">Loading...</div>
 
-<script>
-    const questionInput = document.getElementById('question-input');
-    const submitButton = document.getElementById('submit-button');
-    const chatbox = document.getElementById('chatbox');
-    const loadingDiv = document.getElementById('loading');
+        <script>
+            const questionInput = document.getElementById('question-input');
+            const submitButton = document.getElementById('submit-button');
+            const chatbox = document.getElementById('chatbox');
+            const loadingDiv = document.getElementById('loading');
 
-    const personalityColors = {
-        "The Scholar": "scholar",
-        "The Optimist": "optimist",
-        "The Minimalist": "minimalist",
-        "The Creative": "creative",
-        "The Mentor": "mentor",
-        "The Performer": "performer",
-        "The Traditionalist": "traditionalist",
-        "The Environmentalist": "environmentalist"
-    };
+            const personalityColors = {
+                "The Scholar": "scholar",
+                "The Optimist": "optimist",
+                "The Minimalist": "minimalist",
+                "The Creative": "creative",
+                "The Mentor": "mentor",
+                "The Performer": "performer",
+                "The Traditionalist": "traditionalist",
+                "The Environmentalist": "environmentalist"
+            };
 
-    const personalities = ["The Scholar", "The Optimist", "The Minimalist", "The Creative", "The Mentor", "The Performer", "The Traditionalist", "The Environmentalist"];
-
-
-    // Initial message from the bot
-    const initialMessage = `<div class="message bot-bubble">Bot: Hello! Ask me a question, and I'll respond as different personality types.</div>`;
-    chatbox.innerHTML = initialMessage;
-    chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after initial message
+            const personalities = ["The Scholar", "The Optimist", "The Minimalist", "The Creative", "The Mentor", "The Performer", "The Traditionalist", "The Environmentalist"];
 
 
-    submitButton.addEventListener('click', async () => {
-        const question = questionInput.value.trim();
-        if (!question) {
-            return;
-        }
+            // Initial message from the bot
+            const initialMessage = `<div class="message bot-bubble">Bot: Hello! Ask me a question, and I'll respond as different personality types.</div>`;
+            chatbox.innerHTML = initialMessage;
+            chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after initial message
+            const WORD_LIMIT = 50;
 
-        questionInput.value = '';
-        questionInput.focus();
+            function createTruncatedHTML(text) {
+                const words = text.split(/\s+/);
 
-        const userMessageElement = document.createElement('div');
-        userMessageElement.className = 'message user-bubble';
-        userMessageElement.innerHTML = `<strong class="me">You:</strong>${question}`;
-        chatbox.appendChild(userMessageElement);
-        chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after user message
-
-        loadingDiv.classList.remove('hidden');
-
-        const processPersonality = async () => {
-            for (const personality of personalities) {
-                try {
-                    const response = await fetch(`/personality/${personality}?question=${encodeURIComponent(question)}`);
-                    const data = await response.json();
-
-                    loadingDiv.classList.add('hidden');
-
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = `message bot-bubble ${personalityColors[personality] || ''}`;
-                    messageDiv.innerHTML = `<strong class="bot">${personality}:</strong>${data.response}`;
-                    chatbox.appendChild(messageDiv);
-                    chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after bot message
-
-                } catch (error) {
-                    loadingDiv.classList.add('hidden');
-                    const errorMessageElement = document.createElement('div');
-                    errorMessageElement.className = 'message bot-bubble';
-                    errorMessageElement.innerHTML = `<strong class="bot">Error:</strong>${error.message}`;
-                    chatbox.appendChild(errorMessageElement);
-                    chatbox.scrollTop = chatbox.scrollHeight;  //Scroll even with errors.
+                if (words.length <= WORD_LIMIT) {
+                    return text;
                 }
-            }
-            loadingDiv.classList.add('hidden'); //Ensure loading is hidden after all personalities processed.
-        };
 
-        processPersonality(); // Start the processing loop.
-    });
-</script>
+                const shortText = words.slice(0, WORD_LIMIT).join(' ');
+                const remainingText = words.slice(WORD_LIMIT).join(' ');
+
+                return `
+        <span class="short-text">${shortText}...</span>
+        <span class="full-text d-none">${shortText} ${remainingText}</span>
+        <a href="#" class="see-more ms-2">See more</a>
+    `;
+            }
+
+            document.addEventListener('click', function (e) {
+                if (e.target.classList.contains('see-more')) {
+                    e.preventDefault();
+                    const parent = e.target.parentElement;
+                    parent.querySelector('.short-text').classList.toggle('d-none');
+                    parent.querySelector('.full-text').classList.toggle('d-none');
+                    e.target.textContent =
+                        e.target.textContent === 'See more' ? 'See less' : 'See more';
+                }
+            });
+
+            submitButton.addEventListener('click', async () => {
+                const question = questionInput.value.trim();
+                if (!question) {
+                    return;
+                }
+
+                questionInput.value = '';
+                questionInput.focus();
+
+                const userMessageElement = document.createElement('div');
+                userMessageElement.className = 'message user-bubble';
+                userMessageElement.innerHTML = `
+    <strong class="me">You:</strong>
+    <span>${createTruncatedHTML(question)}</span>
+`;
+
+                chatbox.appendChild(userMessageElement);
+                chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after user message
+
+                loadingDiv.classList.remove('hidden');
+
+                const processPersonality = async () => {
+                    for (const personality of personalities) {
+                        try {
+                            const response = await fetch(`/personality/${personality}?question=${encodeURIComponent(question)}`);
+                            const data = await response.json();
+
+                            loadingDiv.classList.add('hidden');
+
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = `message bot-bubble ${personalityColors[personality] || ''}`;
+                            messageDiv.innerHTML = `
+    <strong class="bot">${personality}:</strong>
+    <span>${createTruncatedHTML(data.response)}</span>
+`;
+
+                            chatbox.appendChild(messageDiv);
+                            chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after bot message
+
+                        } catch (error) {
+                            loadingDiv.classList.add('hidden');
+                            const errorMessageElement = document.createElement('div');
+                            errorMessageElement.className = 'message bot-bubble';
+                            errorMessageElement.innerHTML = `<strong class="bot">Error:</strong>${error.message}`;
+                            chatbox.appendChild(errorMessageElement);
+                            chatbox.scrollTop = chatbox.scrollHeight;  //Scroll even with errors.
+                        }
+                    }
+                    loadingDiv.classList.add('hidden'); //Ensure loading is hidden after all personalities processed.
+                };
+
+                processPersonality(); // Start the processing loop.
+            });
+        </script>
 </body>
+
 </html>
