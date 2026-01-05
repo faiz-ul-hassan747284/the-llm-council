@@ -38,7 +38,7 @@
         .message {
             margin-bottom: 15px;
             padding: 12px 18px;
-            border-radius: 15px;
+            border-radius: 15px 15px 15px 0px;
             display: flex;
             align-items: center;
             word-wrap: break-word;
@@ -64,6 +64,8 @@
             margin-right: 10px;
             float: right;
             clear: both;
+            border-radius: 15px 15px 0px 15px;
+
         }
 
         .bot-bubble {
@@ -73,41 +75,98 @@
         }
 
         .message.scholar {
-            background-color: #E2F0D9 !important;
+            background-color: #D1C4E9 !important; /* Lavender-Purple - More sophisticated, calming */
         }
 
         .message.optimist {
-            background-color: #C8E6C9 !important;
+            background-color: #B3E5BA !important; /* Light, airy, and positive - retains green but feels fresher */
         }
 
         .message.minimalist {
-            background-color: #B2DFDB !important;
+            background-color: #D0E7D6 !important; /* Light, Neutral - emphasizes clean and simple */
         }
 
         .message.creative {
-            background-color: #A5D6A7 !important;
+            background-color: #C5E0C1 !important; /* Soft, muted - encourages imagination */
         }
 
         .message.mentor {
-            background-color: #9ACD9B !important;
+            background-color: #A7D89D !important; /*  Warm, earthy, approachable */
         }
 
         .message.performer {
-            background-color: #8FBE8F !important;
+            background-color: #9EC595 !important; /* A touch of depth - shows energy */
         }
 
         .message.traditionalist {
-            background-color: #7FB37F !important;
+            background-color: #84A584 !important; /* Grounded - feels dependable */
         }
 
         .message.environmentalist {
-            background-color: #699C69 !important;
+            background-color: #66997E !important; /*  Deeper, natural feel - connects to nature */
         }
 
         .see-more {
             cursor: pointer;
             font-size: 0.85rem;
             text-decoration: underline;
+            color: #333;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #fff;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+
+        .avatar.user {
+            background-color: #556B8A !important; /*  A more modern and slightly softer gray */
+        }
+
+        .avatar.scholar {
+            background-color: #A389CC !important; /*  A lovely, sophisticated purple */
+        }
+
+        .avatar.optimist {
+            background-color: #81C784 !important; /*  Lighter, more vibrant green */
+        }
+
+        .avatar.minimalist {
+            background-color: #C0D6B4 !important; /*  Subtle, muted green-grey */
+        }
+
+        .avatar.creative {
+            background-color: #B0D3A9 !important; /*  Soft, inviting green */
+        }
+
+        .avatar.mentor {
+            background-color: #99B37D !important; /* Warm, natural green */
+        }
+
+        .avatar.performer {
+            background-color: #67A773 !important; /*  A slightly more intense green */
+        }
+
+        .avatar.traditionalist {
+            background-color: #547B61 !important; /* Deeper, more grounding green */
+        }
+
+        .avatar.environmentalist {
+            background-color: #436A58 !important; /* A darker, richer green */
+        }
+
+        /* Align avatar + content */
+        .message {
+            display: flex;
+            align-items: flex-start;
         }
     </style>
 </head>
@@ -134,6 +193,16 @@
             const submitButton = document.getElementById('submit-button');
             const chatbox = document.getElementById('chatbox');
             const loadingDiv = document.getElementById('loading');
+
+            function getInitials(name) {
+                return name
+                    .replace('The ', '')
+                    .split(' ')
+                    .map(word => word[0])
+                    .join('')
+                    .substring(0, 2)
+                    .toUpperCase();
+            }
 
             const personalityColors = {
                 "The Scholar": "scholar",
@@ -195,9 +264,13 @@
                 const userMessageElement = document.createElement('div');
                 userMessageElement.className = 'message user-bubble';
                 userMessageElement.innerHTML = `
-    <strong class="me">You:</strong>
-    <span>${createTruncatedHTML(question)}</span>
+    <div class="avatar user">U</div>
+    <div>
+        <strong>You:</strong>
+        <span>${createTruncatedHTML(question)}</span>
+    </div>
 `;
+
 
                 chatbox.appendChild(userMessageElement);
                 chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after user message
@@ -215,9 +288,15 @@
                             const messageDiv = document.createElement('div');
                             messageDiv.className = `message bot-bubble ${personalityColors[personality] || ''}`;
                             messageDiv.innerHTML = `
-    <strong class="bot">${personality}:</strong>
-    <span>${createTruncatedHTML(data.response)}</span>
+    <div class="avatar ${personalityColors[personality]}">
+        ${getInitials(personality)}
+    </div>
+    <div>
+        <strong>${personality}:</strong>
+        <span>${createTruncatedHTML(data.response)}</span>
+    </div>
 `;
+
 
                             chatbox.appendChild(messageDiv);
                             chatbox.scrollTop = chatbox.scrollHeight; // Scroll to bottom after bot message
